@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syringe Reading Practice</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f4f7f6;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 900px;
+        }
+        #syringe-container {
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+        input[type="number"] {
+            padding: 8px;
+            width: 80px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        button {
+            padding: 8px 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button.secondary {
+            background-color: #6c757d;
+        }
+        #feedback {
+            margin-top: 15px;
+            font-weight: bold;
+            height: 24px;
+        }
+        .correct { color: #28a745; }
+        .incorrect { color: #dc3545; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Syringe Reading Challenge</h2>
+    <p>Read the volume in mL indicated by the rubber plunger tip.</p>
+
+    <div id="syringe-container">
+        </div>
+
+    <div class="controls">
+        <input type="number" id="userAnswer" step="0.1" placeholder="0.0">
+        <span>mL</span>
+        <button onclick="checkAnswer()">Check Answer</button>
+        <button class="secondary" onclick="initProblem()">New Problem</button>
+    </div>
+
+    <div id="feedback"></div>
+</div>
+
+<script>
+    let currentAnswer = 0;
+
+    // Configuration from your original code
+    const max = 10;
+    const labelsEvery = 1;
+    const increment = 0.2;
+
+    function initProblem() {
+        // Reset UI
+        document.getElementById('feedback').innerText = '';
+        document.getElementById('userAnswer').value = '';
+        
+        // Randomization logic
+        const whole = Math.floor(Math.random() * (max - 1)) + 1;
+        const fractionSteps = (labelsEvery / increment);
+        const fraction = Math.floor(Math.random() * fractionSteps);
+        
+        currentAnswer = parseFloat((whole + (increment * fraction)).toFixed(1));
+        
+        drawSyringe(currentAnswer);
+    }
+
+    function drawSyringe(answer) {
+        const container = document.getElementById('syringe-container');
+        
+        // Constants for drawing
+        const x_image_offset = 20;
+        const y_image_offset = 60; // Adjusted for centering
+        const needle_length = 60;
+        const needle_dia = 1;
+        const needle_bevel_length = 2;
+        const hub1_length = 20;
+        const hub1_dia = 10;
+        const hub2_length = 10;
+        const hub2_dia = 25;
+        const barrel_dia = 35;
+        const barrel_length = 500; // Scaled up slightly for better visibility
+        const flange_dia = 50;
+        const flange_length = 4;
+
+        // Plunger calculation
+        // Mapping: 0 to 10 scale across the barrel
+        const scale_factor = barrel_length * 0.9 / max; 
+        const plunger_offset = (answer * scale_factor) + x_image_offset + needle_length + hub1_length + hub2_length;
+        
+        const plunger_length = 250;
+        const plunger_dia = barrel_dia - 3;
+        const plunger_thickness = 3;
+        const plunger_taper_length = 10;
+        const plunger_aftertaper_length = 15;
+        const plunger_aftertaper_dia = plunger_dia - 10;
+        const plunger_flange_dia = barrel_dia;
+        const rubber_flange_dia = barrel_dia - 1;
+        const rubber_flange_thickness = 3;
+        const rubber_dia = rubber_flange_dia - 5;
+        const rubber_thickness = 10;
+
+        let svg = `<svg width="800" height="120" xmlns="http://www.w3.org/2000/svg">`;
+
+        // 1. Draw Plunger and Rubber
+        let px1 = plunger_offset + rubber_flange_thickness * 2 + rubber_thickness;
+        let py1 = y_image_offset - plunger_dia / 2;
+        let pPoints = [
+            [px1, py1],
+            [px1 + plunger_thickness, py1],
+            [px1 + plunger_thickness + (plunger_length - plunger_taper_length - plunger_aftertaper_length), py1],
+            [px1 + plunger_thickness + plunger_length - plunger_aftertaper_length, y_image_offset - plunger_aftertaper_dia / 2],
+            [px1 + plunger_thickness + plunger_length, y_image_offset - plunger_aftertaper_dia / 2],
+            [px1 + plunger_thickness + plunger_length, y_image_offset - plunger_flange_dia / 2],
+            [px1 + plunger_thickness + plunger_length + flange_length, y_image_offset - plunger_flange_dia / 2],
+            [px1 + plunger_thickness + plunger_length + flange_length, y_image_offset + plunger_flange_dia / 2],
+            [px1 + plunger_thickness + plunger_length, y_image_offset + plunger_flange_dia / 2],
+            [px1 + plunger_thickness + plunger_length, y_image_offset + plunger_aftertaper_dia / 2],
+            [px1 + plunger_thickness + plunger_length - plunger_aftertaper_length, y_image_offset + plunger_aftertaper_dia / 2],
+            [px1 + plunger_thickness + (plunger_length - plunger_taper_length - plunger_aftertaper_length), y_image_offset + plunger_dia / 2],
+            [px1 + plunger_thickness, y_image_offset + plunger_dia / 2],
+            [px1, y_image_offset + plunger_dia / 2]
+        ].map(p => p.join(',')).join(' ');
+
+        svg += `<polyline points="${pPoints} ${px1},${py1}" fill="#e0e0e0" stroke="grey" stroke-width="1" />`;
+
+        // Rubber Stopper
+        let rx1 = plunger_offset;
+        let ry1 = y_image_offset - rubber_flange_dia / 2;
+        let rPoints = [
+            [rx1, ry1],
+            [rx1 + rubber_flange_thickness, ry1],
+            [rx1 + rubber_flange_thickness, y_image_offset - rubber_dia / 2],
+            [rx1 + rubber_flange_thickness + rubber_thickness, y_image_offset - rubber_dia / 2],
+            [rx1 + rubber_flange_thickness + rubber_thickness, ry1],
+            [rx1 + (rubber_flange_thickness * 2) + rubber_thickness, ry1],
+            [rx1 + (rubber_flange_thickness * 2) + rubber_thickness, y_image_offset + rubber_flange_dia / 2],
+            [rx1 + rubber_flange_thickness + rubber_thickness, y_image_offset + rubber_flange_dia / 2],
+            [rx1 + rubber_flange_thickness + rubber_thickness, y_image_offset + rubber_dia / 2],
+            [rx1 + rubber_flange_thickness, y_image_offset + rubber_dia / 2],
+            [rx1 + rubber_flange_thickness, y_image_offset + rubber_flange_dia / 2],
+            [rx1, y_image_offset + rubber_flange_dia / 2]
+        ].map(p => p.join(',')).join(' ');
+
+        svg += `<polyline points="${rPoints} ${rx1},${ry1}" fill="#444" stroke="#222" stroke-width="1" />`;
+
+        // 2. Draw Barrel/Needle (The static parts)
+        let bx1 = x_image_offset;
+        let by1 = y_image_offset - needle_dia / 2;
+        let barrelPoints = [
+            [bx1, by1],
+            [bx1 + needle_length, by1],
+            [bx1 + needle_length, y_image_offset - hub1_dia / 2],
+            [bx1 + needle_length + hub1_length, y_image_offset - hub1_dia / 2],
+            [bx1 + needle_length + hub1_length, y_image_offset - hub2_dia / 2],
+            [bx1 + needle_length + hub1_length + hub2_length, y_image_offset - hub2_dia / 2],
+            [bx1 + needle_length + hub1_length + hub2_length, y_image_offset - barrel_dia / 2],
+            [bx1 + needle_length + hub1_length + hub2_length + barrel_length, y_image_offset - barrel_dia / 2],
+            [bx1 + needle_length + hub1_length + hub2_length + barrel_length, y_image_offset - flange_dia / 2],
+            [bx1 + needle_length + hub1_length + hub2_length + barrel_length + flange_length, y_image_offset - flange_dia / 2],
+            [bx1 + needle_length + hub1_length + hub2_length + barrel_length + flange_length, y_image_offset + flange_dia / 2],
+            [bx1 + needle_length + hub1_length + hub2_length + barrel_length, y_image_offset + flange_dia / 2],
+            [bx1 + needle_length + hub1_length + hub2_length + barrel_length, y_image_offset + barrel_dia / 2],
+            [bx1 + needle_length + hub1_length + hub2_length, y_image_offset + barrel_dia / 2],
+            [bx1 + needle_length + hub1_length + hub2_length, y_image_offset + hub2_dia / 2],
+            [bx1 + needle_length + hub1_length, y_image_offset + hub2_dia / 2],
+            [bx1 + needle_length + hub1_length, y_image_offset + hub1_dia / 2],
+            [bx1 + needle_length, y_image_offset + hub1_dia / 2],
+            [bx1 + needle_length, y_image_offset + needle_dia / 2],
+            [bx1 - needle_bevel_length, y_image_offset + needle_dia / 2]
+        ].map(p => p.join(',')).join(' ');
+
+        svg += `<polyline points="${barrelPoints} ${bx1},${by1}" fill="none" stroke="black" stroke-width="1.5" />`;
+
+        // 3. Draw Ticks
+        const xStartTicks = x_image_offset + needle_length + hub1_length + hub2_length;
+        const yBottom = y_image_offset + barrel_dia / 2;
+        const labeledTickLen = 13;
+        const otherTickLen = 6;
+
+        for (let i = 0; i <= max; i++) {
+            let tx = xStartTicks + (i * scale_factor);
+            // Major tick
+            svg += `<line x1="${tx}" y1="${yBottom - labeledTickLen}" x2="${tx}" y2="${yBottom}" stroke="black" stroke-width="1"/>`;
+            if (i > 0) {
+                svg += `<text x="${tx - 3}" y="${yBottom + 12}" font-size="10" font-weight="bold">${i}</text>`;
+            }
+            // Minor ticks
+            if (i < max) {
+                for (let j = 1; j < (labelsEvery / increment); j++) {
+                    let subX = tx + (j * increment * scale_factor);
+                    svg += `<line x1="${subX}" y1="${yBottom - otherTickLen}" x2="${subX}" y2="${yBottom}" stroke="black" stroke-width="1"/>`;
+                }
+            }
+        }
+        svg += `<text x="${xStartTicks + (max * scale_factor) + 10}" y="${yBottom + 12}" font-size="12" font-weight="bold">mL</text>`;
+
+        svg += `</svg>`;
+        container.innerHTML = svg;
+    }
+
+    function checkAnswer() {
+        const userVal = parseFloat(document.getElementById('userAnswer').value);
+        const feedback = document.getElementById('feedback');
+        
+        if (isNaN(userVal)) {
+            feedback.innerText = "Please enter a number.";
+            feedback.className = "incorrect";
+            return;
+        }
+
+        if (Math.abs(userVal - currentAnswer) < 0.01) {
+            feedback.innerText = "Correct! Well done.";
+            feedback.className = "correct";
+        } else {
+            feedback.innerText = `Try again. (The rubber edge is at ${currentAnswer})`;
+            feedback.className = "incorrect";
+        }
+    }
+
+    // Initialize on load
+    window.onload = initProblem;
+</script>
+
+</body>
+</html>
