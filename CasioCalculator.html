@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Math Scientific Calculator</title>
+    <style>
+        :root {
+            --calc-bg: #34495e;
+            --screen-bg: #9eb29d; /* Classic Casio LCD green-grey */
+            --btn-gray: #7f8c8d;
+            --btn-black: #2c3e50;
+            --btn-orange: #d35400;
+            --text-color: #2c3e50;
+        }
+
+        body {
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        #calculator {
+            background: var(--calc-bg);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            width: 320px;
+        }
+
+        /* Screen mimicking Casio Dual Line */
+        #screen {
+            background: var(--screen-bg);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        #input-line {
+            font-size: 1.2rem;
+            color: var(--text-color);
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        #output-line {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-color);
+            text-align: right;
+        }
+
+        .fraction-view {
+            display: inline-block;
+            vertical-align: middle;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+        .frac-top { border-bottom: 1px solid black; padding: 0 3px; }
+        .frac-bot { padding: 0 3px; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px 5px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            box-shadow: 0 3px #1a252f;
+            transition: all 0.1s;
+        }
+
+        button:active {
+            box-shadow: 0 1px #1a252f;
+            transform: translateY(2px);
+        }
+
+        .sci-btn { background: var(--btn-black); color: white; font-size: 0.75rem; }
+        .num-btn { background: #ecf0f1; color: var(--btn-black); }
+        .op-btn { background: var(--btn-gray); color: white; }
+        .action-btn { background: var(--btn-orange); color: white; }
+
+        .span-2 { grid-column: span 2; }
+    </style>
+</head>
+<body>
+
+<div id="calculator">
+    <div id="screen">
+        <div id="input-line"></div>
+        <div id="output-line">0</div>
+    </div>
+
+    <div class="grid">
+        <button class="sci-btn" onclick="addFraction()">Abs/Frac</button>
+        <button class="sci-btn" onclick="append('Math.sqrt(')">√</button>
+        <button class="sci-btn" onclick="append('**2')">x²</button>
+        <button class="sci-btn" onclick="append('**')">xⁿ</button>
+
+        <button class="sci-btn" onclick="append('Math.sin(')">sin</button>
+        <button class="sci-btn" onclick="append('Math.cos(')">cos</button>
+        <button class="sci-btn" onclick="append('Math.tan(')">tan</button>
+        <button class="sci-btn" onclick="append('Math.log10(')">log</button>
+
+        <button class="action-btn" onclick="clearScreen()">AC</button>
+        <button class="action-btn" onclick="backspace()">DEL</button>
+        <button class="op-btn" onclick="append('(')">(</button>
+        <button class="op-btn" onclick="append(')')">)</button>
+
+        <button class="num-btn" onclick="append('7')">7</button>
+        <button class="num-btn" onclick="append('8')">8</button>
+        <button class="num-btn" onclick="append('9')">9</button>
+        <button class="op-btn" onclick="append('/')">÷</button>
+
+        <button class="num-btn" onclick="append('4')">4</button>
+        <button class="num-btn" onclick="append('5')">5</button>
+        <button class="num-btn" onclick="append('6')">6</button>
+        <button class="op-btn" onclick="append('*')">×</button>
+
+        <button class="num-btn" onclick="append('1')">1</button>
+        <button class="num-btn" onclick="append('2')">2</button>
+        <button class="num-btn" onclick="append('3')">3</button>
+        <button class="op-btn" onclick="append('-')">-</button>
+
+        <button class="num-btn" onclick="append('0')">0</button>
+        <button class="num-btn" onclick="append('.')">.</button>
+        <button class="op-btn" onclick="calculate()">=</button>
+        <button class="op-btn" onclick="append('+')">+</button>
+    </div>
+</div>
+
+<script>
+    let currentInput = "";
+    const inputDisplay = document.getElementById('input-line');
+    const outputDisplay = document.getElementById('output-line');
+
+    function append(value) {
+        currentInput += value;
+        updateDisplay();
+    }
+
+    function clearScreen() {
+        currentInput = "";
+        outputDisplay.innerText = "0";
+        updateDisplay();
+    }
+
+    function backspace() {
+        currentInput = currentInput.slice(0, -1);
+        updateDisplay();
+    }
+
+    function updateDisplay() {
+        // Simple regex to find fractions like 1/2 and render them
+        let formatted = currentInput
+            .replace(/\//g, "÷")
+            .replace(/\*/g, "×")
+            .replace(/Math\./g, "");
+        
+        inputDisplay.innerText = formatted;
+    }
+
+    function addFraction() {
+        // On a Casio, the fraction button creates a template. 
+        // Here, we'll prompt for ease of use in a web context.
+        const num = prompt("Enter Numerator:");
+        const den = prompt("Enter Denominator:");
+        if (num && den) {
+            append(`(${num}/${den})`);
+        }
+    }
+
+    function calculate() {
+        try {
+            // Evaluate the string as JavaScript math
+            let result = eval(currentInput);
+            
+            // Handle decimal precision for business math
+            if (!Number.isInteger(result)) {
+                result = Math.round(result * 10000) / 10000;
+            }
+            
+            outputDisplay.innerText = result;
+        } catch (e) {
+            outputDisplay.innerText = "Syntax Error";
+        }
+    }
+</script>
+
+</body>
+</html>
